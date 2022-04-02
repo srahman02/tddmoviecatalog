@@ -3,9 +3,10 @@ package com.example.moviecatalogservice.gateway.impl;
 import com.example.moviecatalogservice.config.GatewayConfig;
 import com.example.moviecatalogservice.gateway.MovieRestGateway;
 import com.example.moviecatalogservice.model.CatalogItems;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-
+@Configuration
 public class MovieCatalogGatewayImpl implements MovieRestGateway {
 
     private final RestTemplate restTemplate;

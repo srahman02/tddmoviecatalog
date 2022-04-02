@@ -3,9 +3,11 @@ package com.example.moviecatalogservice.controller
 import com.example.moviecatalogservice.exception.ApiError
 import com.example.moviecatalogservice.exception.ItemsNotFoundException
 import com.example.moviecatalogservice.exception.RestExceptionHandler
+import com.example.moviecatalogservice.gateway.MovieRestGateway
 import com.example.moviecatalogservice.model.CatalogItem
 import com.example.moviecatalogservice.model.CatalogItems
 import com.example.moviecatalogservice.service.CatalogService
+import com.example.moviecatalogservice.service.impl.CatalogServiceImpl
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.servlet.MockMvc
@@ -20,13 +22,14 @@ class MovieCatalogControllerSpec extends Specification {
 
     ObjectMapper objectMapper
     MockMvc mockMvc
-    CatalogService catalogService
+    CatalogService mockCatalogService
     def movieCatalogController
+    MovieRestGateway mockRestGateway = Mock()
 
     def setup() {
         objectMapper = new ObjectMapper()
-        catalogService = Mock(CatalogService)
-        movieCatalogController = new MovieCatalogController(catalogService);
+        mockCatalogService = new CatalogServiceImpl(mockRestGateway)
+        movieCatalogController = new MovieCatalogController(mockCatalogService);
         mockMvc = MockMvcBuilders.standaloneSetup(movieCatalogController)
                 .setControllerAdvice(new RestExceptionHandler()).build()
     }
@@ -45,7 +48,7 @@ class MovieCatalogControllerSpec extends Specification {
         def content = mvcResult.getResponse().getContentAsString();
         CatalogItems actualCatalogItems = objectMapper.readValue(content, CatalogItems.class)
         then:
-        1 * catalogService.getCatalogItems(userId) >> expectedCatalogItems
+        1 * mockRestGateway.getCatalogItems(userId) >> expectedCatalogItems
         actualCatalogItems == expectedCatalogItems
     }
 
@@ -60,7 +63,7 @@ class MovieCatalogControllerSpec extends Specification {
         def content = mvcResult.getResponse().getContentAsString();
         ApiError error = objectMapper.readValue(content, ApiError.class)
         then:
-        1 * catalogService.getCatalogItems(userId) >> { throw new ItemsNotFoundException(errorMessage) }
+        1 * mockRestGateway.getCatalogItems(userId) >> { throw new ItemsNotFoundException(errorMessage) }
         error.message == errorMessage
         error.status == HttpStatus.NOT_FOUND
     }
